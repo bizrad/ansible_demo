@@ -1,0 +1,22 @@
+---
+- name: "Import install tasks"
+  import_tasks:
+    file: install.yaml
+  tags:
+    - install
+    - never
+
+- name: "Import configuration tasks"
+  import_tasks:
+    file: configure.yaml
+  tags:
+    - install
+    - configure
+    - never
+
+- name: "Import install tasks"
+  import_tasks:
+    file: uninstall.yaml
+  tags:
+    - uninstall
+    - never

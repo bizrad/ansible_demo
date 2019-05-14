@@ -1,0 +1,15 @@
+---
+- name: "Deploy my server for example"
+  hosts: all
+  become: yes
+  gather_facts: true
+  roles:
+    - configure_chrony
+    - deploy_tomcat
+  pre_tasks:
+    - name: Fail if not RedHat 6/7 based OS
+      assert:
+        that: ansible_distribution in ['RedHat', 'Amazon', 'CentOS']
+        fail_msg: "OS is not supported!"
+      tags:
+        - always

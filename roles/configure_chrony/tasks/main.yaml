@@ -1,0 +1,28 @@
+---
+- name: "Disable ntpd"
+  service:
+    name: ntpd
+    state: stopped
+    enabled: no
+  failed_when: false
+  tags:
+    - always
+
+- name: "Install chrony"
+  package:
+    name: chrony
+    state: present
+  notify: restart_chrony
+  tags:
+    - always
+
+- name: "Put chrony.conf file in place"
+  template:
+    src: chrony.conf.j2
+    dest: "/etc/chrony.conf"
+    mode: 0644
+    owner: root
+    group: root
+  notify: restart_chrony
+  tags:
+    - always

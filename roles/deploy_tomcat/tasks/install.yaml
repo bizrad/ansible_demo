@@ -1,0 +1,72 @@
+---
+- name: "Ensure our tomcat version is sane"
+  assert:
+    that: tomcat_version == "{{ tomcat_maj_version }}.{{ tomcat_min_version }}"
+    msg: "The tomcat version is not sane, did you override it incorrectly?"
+
+- name: "Check if tomcat is already deployed on the server"
+  stat:
+    path: /opt/tomcat
+  register: opt_tomcat_check
+
+- name: "Install java-1.8.0-openjdk"
+  package:
+    name: "java-1.8.0-openjdk"
+    state: present
+
+- name: "Create tomcat service account group"
+  group:
+    name: tomcat
+    state: present
+
+- name: "Create tomcat service account"
+  user:
+    name: tomcat
+    group: tomcat
+    local: yes
+    shell: "/bin/nologin"
+    home: "{{ tomcat_catalina_base }}"
+    password: "*"
+
+- name: "Deploy tomcat from tarball, use a block for a more interesting example"
+  block:
+    - name: "Extract tomcat from tarball"
+      unarchive:
+          # src: apache-tomcat-{{ tomcat_version }}.tar.gz
+          # remote_src: no
+          src: "https://www.apache.org/dist/tomcat/tomcat-{{ tomcat_maj_version }}/v{{ tomcat_version }}/bin/apache-tomcat-{{ tomcat_version }}.tar.gz"
+          remote_src: yes
+          dest: "{{ tomcat_catalina_base }}"
+          owner: tomcat
+          group: tomcat
+          extra_opts: 
+            - "--strip-components=1"
+    - name: "Set ownership for tomcat files"
+      file:
+        path: "{{ tomcat_catalina_base }}"
+        owner: tomcat
+        group: tomcat
+        recurse: yes
+  rescue:
+    - name: "Remove {{ tomcat_catalina_base }} on failure"
+      file:
+        path: "{{ tomcat_catalina_base }}"
+        state: absent
+  always:
+    - name: "Remove tomcat tar file"
+      file:
+        path: "/tmp/apache-tomcat-{{ tomcat_version }}.tar.gz"
+        state: absent
+  when: not opt_tomcat_check.stat.exists
+
+- name: "Deploy tomcat systemd unit file"
+  copy:
+    src: "tomcat.service"
+    dest: "/etc/systemd/system/tomcat.service"
+
+- name: "Start tomcat service"
+  service:
+   name: tomcat
+   state: started
+   enabled: yes
+

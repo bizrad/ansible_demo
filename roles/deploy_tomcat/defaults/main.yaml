@@ -1,0 +1,6 @@
+---
+tomcat_maj_version: "8"
+tomcat_min_version: "5.41"
+tomcat_version: "{{ tomcat_maj_version }}.{{ tomcat_min_version }}"
+tomcat_catalina_base: "/opt/tomcat"
+tomcat_war_file: "sample.war"

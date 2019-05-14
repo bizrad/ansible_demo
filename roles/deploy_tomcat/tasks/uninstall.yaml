@@ -1,0 +1,35 @@
+---
+- name: "Stop tomcat service"
+  service:
+   name: tomcat
+   state: stopped
+   enabled: no
+
+- name: "Remove /opt/tomcat"
+  file:
+    path: "/opt/tomcat"
+    state: absent
+
+- name: "Remove tomcat systemd unit file"
+  file:
+    state: absent
+    path: "/etc/systemd/system/tomcat.service"
+
+- name: "Remove java-1.8.0-openjdk"
+  package:
+    name: "java-1.8.0-openjdk"
+    state: absent
+
+- name: "Remove tomcat service account"
+  user:
+    name: tomcat
+    group: tomcat
+    state: absent
+    remove: yes
+
+- name: "Remove tomcat service account group"
+  group:
+    name: tomcat
+    state: absent
+
+

@@ -1,0 +1,9 @@
+---
+# example war file from https://tomcat.apache.org/tomcat-8.0-doc/appdev/sample/
+- name: "Deploy {{ tomcat_war_file }} tomcat webapp"
+  copy:
+    src: "{{ tomcat_war_file }}"
+    dest: "{{ tomcat_catalina_base }}/webapps/{{ tomcat_war_file }}"
+    owner: tomcat
+    group: tomcat
+  notify: restart_tomcat
