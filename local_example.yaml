@@ -4,7 +4,7 @@
 - name: 'Test'
   hosts: 127.0.0.1
   connection: local
-  become: yes
+  become: no
   gather_facts: True
   tasks:
   - name: make list
@@ -12,7 +12,8 @@
       my_list:
         - "one"
         - "two"
-      my_list2: "value"
+      my_list2:
+        - "value"
 
   - name: merge lists
     set_fact:
