@@ -17,3 +17,4 @@
       - "testrole"
   # Hide password from logs
   no_log: true
+  notify: restart_tomcat
