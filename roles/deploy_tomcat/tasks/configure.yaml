@@ -7,3 +7,13 @@
     owner: tomcat
     group: tomcat
   notify: restart_tomcat
+
+- name: "Add users to tomcat-users.xml"
+  tomcat_users:
+    username: "tomcat"
+    password: "{{ tomcat_password }}"
+    roles:
+      - "tomcat"
+      - "testrole"
+  # Hide password from logs
+  no_log: true

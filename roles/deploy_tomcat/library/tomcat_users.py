@@ -13,39 +13,43 @@ def main():
         )
     )
     changed = False
-    add_new_user = False
     tree = xmltree.parse('/opt/tomcat/conf/tomcat-users.xml')
     root = tree.getroot()
-    user_list = list()
     try:
-        # Create a list of dictionaries for each user item
-        for item in root.findall('user'):
-            item_dict = dict()
-            item_dict['xmltext'] = item.text
-            for text_content in item.text.split():
-                item_dict[text_content.split('=')[0]] = text_content.split('=')[1]
-            user_list.append(item_dict)
-        # Compare our input user to the current data
-        for user_dict in user_list:
-            if user_dict["username"] == module.params['username'] \
-                    and user_dict["password"] == module.params['password'] \
-                    and user_dict["roles"] == module.params['roles']:
+        # Check that any roles are defined
+        rolelist = list()
+        for item in root.findall('{http://tomcat.apache.org/xml}role'):
+            rolelist.append(item.attrib['rolename'])
+        for role in module.params['roles']:
+            if role not in rolelist:
+                new_element = xmltree.SubElement(root, "{http://tomcat.apache.org/xml}role")
+                new_element.set('rolename', role)
+                changed = True
+        # Check for updated info or no-op case
+        for item in root.findall('{http://tomcat.apache.org/xml}user'):
+            if item.attrib['username'] == module.params['username'] \
+                    and item.attrib['password'] == module.params['password'] \
+                    and item.attrib['roles'] == ','.join(module.params['roles']):
                 # The data already exactly matches an entry, nothing to do
-                module.exit_json(changed=changed, my_return_var="foo")
-            elif user_dict["username"] == module.params['username']:
-                # Remove the entry matching user_dict['xmltext']
+                if changed:
+                    tree.write('/opt/tomcat/conf/tomcat-users.xml')
+                module.exit_json(changed=changed, my_return_var='foo')
+            elif item.attrib['username'] == module.params['username']:
+                item.set('password', module.params['password'])
+                item.set('roles', ','.join(module.params['roles']))
+                tree.write('/opt/tomcat/conf/tomcat-users.xml')
+                module.exit_json(changed=True, my_return_var="foo")
 
-                pass
-        # Add the line with our new data in
-        changed = True
-        xmltree.SubElement(root, "user").text = 'username="{0}" password="{1}" roles="{2}"' \
-            .format(module.params['username'], module.params['password'], ",".join(module.params['roles']))
+        # If we have not exited already add the new user
+        new_element = xmltree.SubElement(root, "{http://tomcat.apache.org/xml}user")
+        new_element.set('username', module.params['username'])
+        new_element.set('password', module.params['password'])
+        new_element.set('roles', ','.join(module.params['roles']))
+        tree.write('/opt/tomcat/conf/tomcat-users.xml')
+        module.exit_json(changed=True, my_return_var="foo")
     except (IndexError, KeyError):
         module.fail_json(msg="User XML file has malformed data.")
 
-
-
-    module.exit_json(changed=changed, my_return_var="foo")
 
 if __name__ == '__main__':
     main()
