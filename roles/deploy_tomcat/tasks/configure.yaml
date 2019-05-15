@@ -15,6 +15,13 @@
     roles:
       - "tomcat"
       - "testrole"
+      - "manager-gui"
   # Hide password from logs
   no_log: true
+  notify: restart_tomcat
+
+- name: "Copy over tomcat manager context.xml"
+  copy:
+    src: "manager_context.xml"
+    dest: "/opt/tomcat/webapps/manager/META-INF/context.xml"
   notify: restart_tomcat
